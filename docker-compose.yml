@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  nvgt_zip:
+    build: '.'
+    ports:
+      - '3105:3105'
+    restart: unless-stopped
