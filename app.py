@@ -38,12 +38,11 @@ def get_extension(platform: str) -> str:
 			return "dmg"
 		case "windows":
 			return "exe"
-		case _:
-			return None
+		return None
 
 @app.route("/version.json")
 def return_nvgt_version(version = get_nvgt_version()):
-	return jsonify({"version": version})
+	return jsonify(["version": version])
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0", debug=False, port=3105)
