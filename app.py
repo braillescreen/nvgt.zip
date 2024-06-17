@@ -20,7 +20,7 @@ def redirect_to(path: str) -> str:
 
 @app.route("/")
 def home():
-	return redirect_to("downloads")
+	return render_template("index.html")
 
 @app.route("/<platform>")
 def download(platform: str) -> str:
