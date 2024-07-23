@@ -5,9 +5,6 @@ app = Flask(__name__)
 base_url = "https://nvgt.gg"
 
 def get_nvgt_version() -> str:
-	"""
-	Get the latest version from NVGT server.
-	"""
 	try:
 		response = requests.get(f"{base_url}/downloads/latest_version")
 		response.raise_for_status()
@@ -44,6 +41,10 @@ def get_extension(platform: str) -> str:
 @app.route("/version.json")
 def return_nvgt_version(version = get_nvgt_version()):
 	return jsonify({"version": version})
+
+@app.route("/<platform>dev")
+def download_dev(platform):
+	if not ["linuxdev", "macdev", "windev"] in platform: return render_template("404.html")
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0", debug=False, port=3105)
