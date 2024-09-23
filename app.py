@@ -29,6 +29,8 @@ def download(platform: str) -> str:
 
 def get_extension(platform: str) -> str:
 	match platform:
+		case "android":
+			return "apk"
 		case "linux":
 			return "tar.gz"
 		case "mac":
@@ -42,9 +44,12 @@ def get_extension(platform: str) -> str:
 def return_nvgt_version(version = get_nvgt_version()):
 	return jsonify({"version": version})
 
+""" todo
 @app.route("/<platform>dev")
 def download_dev(platform):
 	if not ["linuxdev", "macdev", "windev"] in platform: return render_template("404.html")
+
+"""
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0", debug=False, port=3105)
