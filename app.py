@@ -41,8 +41,11 @@ def get_extension(platform: str) -> str:
 			return None
 
 @app.route("/version.json")
-def return_nvgt_version(version = get_nvgt_version()):
-	return jsonify({"version": version})
+def return_nvgt_version(as_json = False, version = get_nvgt_version()):
+	return jsonify({"version": version}) if as_json else version
+
+@app.route("/version")
+def raw_version(): return return_nvgt_version(False)
 
 """ todo
 @app.route("/<platform>dev")
