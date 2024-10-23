@@ -47,12 +47,5 @@ def return_nvgt_version(as_json = False, version = get_nvgt_version()):
 @app.route("/version")
 def raw_version(): return return_nvgt_version(False)
 
-""" todo
-@app.route("/<platform>dev")
-def download_dev(platform):
-	if not ["linuxdev", "macdev", "windev"] in platform: return render_template("404.html")
-
-"""
-
 if __name__ == "__main__":
 	app.run(host="0.0.0.0", debug=False, port=3105)
