@@ -20,6 +20,7 @@ git clone https://github.com/braillescreen/nvgt.zip.git
 cd nvgt.zip
 pip3 install -r requirements.txt
 python3 app.py
+```
 
 The server will be listening on port 3105 on all network interfaces.
 
