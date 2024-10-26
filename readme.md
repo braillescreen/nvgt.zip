@@ -14,6 +14,12 @@ cd nvgt.zip
 docker compose up -d
 ```
 
+#### My one-line restart command
+Useful when applying updates.
+```
+cd nvgt.zip; docker compose down; git pull; docker compose up -d
+```
+
 ### Not docker
 ```
 git clone https://github.com/braillescreen/nvgt.zip.git
