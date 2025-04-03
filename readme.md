@@ -7,6 +7,7 @@ A small website designed to help you download the latest version of the [Nonvisu
 
 ## Running the code
 This website is a basic Flask app. I run it through Docker, but you can also run it standalone quite easily.
+
 ### Docker
 ```
 git clone https://github.com/braillescreen/nvgt.zip.git
