@@ -99,16 +99,17 @@ def dev_download(platform: str) -> str:
 def commits() -> str:
 	limit = request.args.get("limit", 100)
 	commits = get_github_commits(limit)
-
-	if request.path.endswith(".txt"):
-		lines = []
-		for commit in commits:
-			sha = commit["sha"][:7]
-			author = commit["commit"]["author"]["name"]
-			msg = commit["commit"]["message"].splitlines()[0]
-			lines.append(f"{author} {sha}: {msg}")
-		return Response("\n".join(lines), mimetype="text/plain")
-	return render_template("commits.html", commits=commits)
+	if commits:
+		if request.path.endswith(".txt"):
+			lines = []
+			for commit in commits:
+				sha = commit["sha"][:7]
+				author = commit["commit"]["author"]["name"]
+				msg = commit["commit"]["message"].splitlines()[0]
+				lines.append(f"{author} {sha}: {msg}")
+			return Response("\n".join(lines), mimetype="text/plain")
+		return render_template("commits.html", commits=commits)
+	abort(500, description = "Failed to get NVGT release")
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0", port=3105, debug=False)
