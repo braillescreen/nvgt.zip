@@ -21,20 +21,20 @@ app = Flask(__name__)
 BASE_URL = "https://nvgt.gg"
 DEV_URL = "https://github.com/samtupy/nvgt"
 
-_cached_version = None
-_cached_time = 0
-CACHE_TTL_SECONDS = 300
+_version = None
+_time = 0
+_TTL = 300
 
 def get_nvgt_version(force_refresh: bool = False) -> str:
-	global _cached_version, _cached_time
-	if not force_refresh and _cached_version and (time.time() - _cached_time < CACHE_TTL_SECONDS):
-		return _cached_version
+	global _version, _time
+	if not force_refresh and _version and (time.time() - _time < _TTL):
+		return _version
 	try:
 		response = requests.get(f"{BASE_URL}/downloads/latest_version")
 		response.raise_for_status()
-		_cached_version = response.text.strip()
-		_cached_time = time.time()
-		return _cached_version
+		_version = response.text.strip()
+		_time = time.time()
+		return _version
 	except requests.RequestException as e:
 		abort(500, description=f"Failed to get NVGT version: {e}")
 
