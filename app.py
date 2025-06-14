@@ -12,22 +12,43 @@
 		3. This notice may not be removed or altered from any source distribution.
 """
 
-from flask import Flask, redirect, jsonify, render_template
+from flask import Flask, redirect, jsonify, render_template, abort
 import requests
+import time
 
 app = Flask(__name__)
-base_url = "https://nvgt.gg"
 
-def get_nvgt_version() -> str:
+BASE_URL = "https://nvgt.gg"
+DEV_URL = "https://github.com/samtupy/nvgt"
+
+_cached_version = None
+_cached_time = 0
+CACHE_TTL_SECONDS = 300
+
+def get_nvgt_version(force_refresh: bool = False) -> str:
+	global _cached_version, _cached_time
+	if not force_refresh and _cached_version and (time.time() - _cached_time < CACHE_TTL_SECONDS):
+		return _cached_version
 	try:
-		response = requests.get(f"{base_url}/downloads/latest_version")
+		response = requests.get(f"{BASE_URL}/downloads/latest_version")
 		response.raise_for_status()
-		return response.text
-	except requests.exceptions.RequestException as e:
-		abort(500, description=f"Failed to get NVGT version: {str(e)}")
+		_cached_version = response.text.strip()
+		_cached_time = time.time()
+		return _cached_version
+	except requests.RequestException as e:
+		abort(500, description=f"Failed to get NVGT version: {e}")
 
-def redirect_to(path: str) -> str:
-	return redirect(f"{base_url}/{path}", code=301)
+def redirect_to(path: str, use_dev: bool = False) -> str:
+	return redirect(f"{DEV_URL if use_dev else BASE_URL}/{path}", code=301)
+
+def get_extension(platform: str) -> str | None:
+	extensions = {
+		"android": "apk",
+		"linux": "tar.gz",
+		"mac": "dmg",
+		"windows": "exe"
+	}
+	return extensions.get(platform)
 
 @app.route("/")
 def home():
@@ -35,32 +56,20 @@ def home():
 
 @app.route("/<platform>")
 def download(platform: str) -> str:
-	version = get_nvgt_version()
 	extension = get_extension(platform)
 	if extension:
+		version = get_nvgt_version()
 		return redirect_to(f"downloads/nvgt_{version}.{extension}")
-	return render_template("404.html")
-
-def get_extension(platform: str) -> str:
-	match platform:
-		case "android":
-			return "apk"
-		case "linux":
-			return "tar.gz"
-		case "mac":
-			return "dmg"
-		case "windows":
-			return "exe"
-		case _:
-			return None
+	return render_template("404.html"), 404
 
 @app.route("/version.json")
-def return_nvgt_version(as_json = True, version = get_nvgt_version()):
-	return jsonify({"version": version}) if as_json else version
+def version_json() -> str:
+	version = get_nvgt_version()
+	return jsonify({"version": version})
 
 @app.route("/version")
-def raw_version():
-	return return_nvgt_version(False)
+def version_raw() -> str:
+	return get_nvgt_version()
 
 if __name__ == "__main__":
-	app.run(host="0.0.0.0", debug=False, port=3105)
+	app.run(host="0.0.0.0", port=3105, debug=False)
