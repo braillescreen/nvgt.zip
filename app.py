@@ -12,7 +12,7 @@
 """
 
 from flask import Flask, redirect, jsonify, render_template, abort, Response, request
-import consts, requests, sys, time
+import const, requests, sys, time
 
 app = Flask(__name__)
 
