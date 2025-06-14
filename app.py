@@ -17,19 +17,19 @@ import const, requests, sys, time
 app = Flask(__name__)
 
 def get_nvgt_version(force_refresh: bool = False) -> str:
-	if not force_refresh and consts._version and (time.time() - consts._time < consts._TTL):
-		return consts._version
+	if not force_refresh and const._version and (time.time() - const._time < const._TTL):
+		return const._version
 	try:
-		response = requests.get(f"{consts.BASE_URL}/downloads/latest_version")
+		response = requests.get(f"{const.BASE_URL}/downloads/latest_version")
 		response.raise_for_status()
-		consts._version = response.text.strip()
-		consts._time = time.time()
-		return consts._version
+		const._version = response.text.strip()
+		const._time = time.time()
+		return const._version
 	except requests.RequestException as e:
 		abort(500, description=f"Failed to get NVGT version: {e}")
 
 def redirect_to(path: str, use_dev: bool = False) -> str:
-	return redirect(f"{consts.DEV_URL if use_dev else consts.BASE_URL}/{path}", code=301)
+	return redirect(f"{const.DEV_URL if use_dev else const.BASE_URL}/{path}", code=301)
 
 def get_extension(platform: str) -> str | None:
 	extensions = {
@@ -41,25 +41,25 @@ def get_extension(platform: str) -> str | None:
 	return extensions.get(platform)
 
 def get_latest_github_release():
-	if not consts._release or time.time() - consts._release_time > consts._TTL:
-		r = requests.get(f"{consts.GITHUB_API}/releases/latest")
+	if not const._release or time.time() - const._release_time > const._TTL:
+		r = requests.get(f"{const.GITHUB_API}/releases/latest")
 		if r.ok:
-			consts._release = r.json()
-			consts._release_time = time.time()
+			const._release = r.json()
+			const._release_time = time.time()
 		else:
 			abort(502)
-	return consts._release
+	return const._release
 
 def get_github_commits(limit=100):
 	limit = min(100, max(1, int(limit)))
-	if not consts._commits or time.time() - consts._commits_time > consts._TTL:
-		r = requests.get(f"{consts.GITHUB_API}/commits?per_page={limit}")
+	if not const._commits or time.time() - const._commits_time > const._TTL:
+		r = requests.get(f"{const.GITHUB_API}/commits?per_page={limit}")
 		if r.ok:
-			consts._commits = r.json()
-			consts._commits_time = time.time()
+			const._commits = r.json()
+			const._commits_time = time.time()
 		else:
 			abort(502)
-	return consts._commits[:limit]
+	return const._commits[:limit]
 
 @app.route("/")
 def home():
@@ -99,6 +99,7 @@ def dev_download(platform: str) -> str:
 def commits() -> str:
 	limit = request.args.get("limit", 100)
 	commits = get_github_commits(limit)
+
 	if request.path.endswith(".txt"):
 		lines = []
 		for commit in commits:
@@ -107,16 +108,7 @@ def commits() -> str:
 			msg = commit["commit"]["message"].splitlines()[0]
 			lines.append(f"{author} {sha}: {msg}")
 		return Response("\n".join(lines), mimetype="text/plain")
-	else:
-		html = [f'<html><body><h1>Recent {len(commits)} Commits</h1><ul>']
-		for commit in commits:
-			sha = commit["sha"][:7]
-			msg = commit["commit"]["message"]
-			author = commit["commit"]["author"]["name"]
-			date = commit["commit"]["author"]["date"]
-			html.append(f"<li>{sha}<p>{author} on {date}: {msg}</p></li>")
-		html.append("</ul></body></html>")
-		return Response("".join(html), mimetype="text/html")
+	return render_template("commits.html", commits=commits)
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0", port=3105, debug=False)
