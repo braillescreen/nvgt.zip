@@ -103,17 +103,18 @@ def commits() -> str:
 		lines = []
 		for commit in commits:
 			sha = commit["sha"][:7]
+			author = commit["commit"]["author"]["name"]
 			msg = commit["commit"]["message"].splitlines()[0]
-			lines.append(f"{sha}: {msg}")
+			lines.append(f"{author} {sha}: {msg}")
 		return Response("\n".join(lines), mimetype="text/plain")
 	else:
-		html = ['<html><body><h1>Recent Commits</h1><ul>']
+		html = [f'<html><body><h1>Recent {len(commits)} Commits</h1><ul>']
 		for commit in commits:
 			sha = commit["sha"][:7]
 			msg = commit["commit"]["message"]
 			author = commit["commit"]["author"]["name"]
 			date = commit["commit"]["author"]["date"]
-			html.append(f"<li><h2>{sha}</h2><p><b>{author}</b> on {date}</p><pre>{msg}</pre></li>")
+			html.append(f"<li>{sha}<p>{author} on {date}: {msg}</p></li>")
 		html.append("</ul></body></html>")
 		return Response("".join(html), mimetype="text/html")
 
