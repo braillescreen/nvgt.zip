@@ -8,6 +8,6 @@ _release_time = 0
 _commits = None
 _commits_time = 0
 
-BASE_URL = "https://nvgt.gg"
-DEV_URL = "https://github.com/samtupy/nvgt"
-GITHUB_API = "https://api.github.com/repos/samtupy/nvgt"
+_BASE_URL = "https://nvgt.gg"
+_DEV_URL = "https://github.com/samtupy/nvgt"
+_GITHUB_API = "https://api.github.com/repos/samtupy/nvgt"
