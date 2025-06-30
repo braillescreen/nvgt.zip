@@ -6,5 +6,19 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "flask>=3.1.1",
+    "pre-commit>=4.2.0",
     "requests>=2.32.4",
+    "rough>=1.5",
 ]
+
+[tool.ruff]
+fix = true
+line-length = 120
+
+[tool.ruff.lint]
+select = ["I"]
+
+[tool.ruff.format]
+indent-style = "tab"
+quote-style = "double"
+line-ending = "lf"
