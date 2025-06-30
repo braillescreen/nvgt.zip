@@ -25,10 +25,10 @@ Useful when applying updates.
 cd nvgt.zip; docker compose down; git pull; docker compose up -d
 ```
 
-### Running standalone
+### Running standalone using uv
 ```
-pip3 install -r requirements.txt
-python3 app.py
+pip3 install uv
+uv run app.py
 ```
 
 The server will listen on port 3105 on all network interfaces.
