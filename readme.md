@@ -4,7 +4,8 @@ A small website designed to help you download the latest version of the [Nonvisu
 ## Features
 * Use `/mac`, `/win`, etc. to download a version for that particular platform (a full list is on the homepage).
 * Use `/version` to get the latest NVGT version in plaintext, or `/version.json` to get it returned in JSON format.
-* Use `/commits.html` or `/commits.txt` to get the 100 most recent commits to NVGT.
+* Use `/commits.html` or `/commits.txt` to get the 100 most recent commits to NVGT displayed in that format.
+
 
 ## Running the code
 This website is a basic Flask app. I run it through Docker, but you can also run it standalone quite easily.
