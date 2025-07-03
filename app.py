@@ -12,11 +12,10 @@ Permission is granted to anyone to use this software for any purpose, including 
 """
 
 import logging
-import sys
-import time
 
 import requests
 from flask import Flask, Response, abort, jsonify, redirect, render_template, request
+from flask.typing import ResponseReturnValue
 
 import const
 
@@ -26,121 +25,98 @@ if const._DEBUGGING:
 	logging.basicConfig(level=logging.DEBUG)
 
 
-def get_nvgt_version(force_refresh: bool = False) -> str:
-	if not force_refresh and const._version and (time.time() - const._time < const._TTL):
-		return const._version
+def fetch_nvgt_version() -> str:
+	"""Fetch the latest NVGT version string."""
 	try:
 		response = requests.get(f"{const._BASE_URL}/downloads/latest_version")
 		response.raise_for_status()
-		const._version = response.text.strip()
-		const._time = time.time()
-		return const._version
+		return response.text.strip()
 	except requests.RequestException as e:
-		abort(500, description=f"Failed to get NVGT version: {e}")
+		raise abort(500, description=f"Failed to get NVGT version: {e}")
 
 
-def redirect_to(path: str, use_dev: bool = False) -> str:
-	return redirect(f"{const._DEV_URL if use_dev else const._BASE_URL}/{path}", code=301)
+def fetch_latest_github_release() -> dict:
+	"""Fetch the latest GitHub release data."""
+	try:
+		r = requests.get(f"{const._GITHUB_API}/releases/tags/latest")
+		r.raise_for_status()
+		return r.json()
+	except requests.RequestException as e:
+		raise abort(502, description=f"Failed to fetch GitHub release: {e}")
+
+
+def fetch_github_commits() -> list:
+	"""Fetch recent GitHub commits."""
+	limit = min(100, max(1, int(request.args.get("limit", 100))))
+	try:
+		r = requests.get(f"{const._GITHUB_API}/commits?per_page={limit}")
+		r.raise_for_status()
+		return r.json()
+	except requests.RequestException as e:
+		raise abort(502, description=f"Failed to fetch GitHub commits: {e}")
 
 
 def get_extension(platform: str) -> str | None:
-	extensions = {"android": "apk", "linux": "tar.gz", "mac": "dmg", "windows": "exe"}
-	return extensions.get(platform)
-
-
-def get_latest_github_release():
-	if not const._release or time.time() - const._release_time > const._TTL:
-		try:
-			r = requests.get(f"{const._GITHUB_API}/releases/tags/latest")
-			if r.ok:
-				const._release = r.json()
-				const._release_time = time.time()
-			else:
-				abort(502)
-		except requests.RequestException as e:
-			abort(502, description=f"Failed to fetch GitHub release: {e}")
-	else:
-		return const._release
-
-
-def get_github_commits(limit=100):
-	limit = min(100, max(1, int(limit)))
-	if not const._commits or time.time() - const._commits_time > const._TTL:
-		try:
-			r = requests.get(f"{const._GITHUB_API}/commits?per_page={limit}")
-			if r.ok:
-				const._commits = r.json()
-				const._commits_time = time.time()
-			else:
-				abort(502)
-		except requests.RequestException as e:
-			abort(502, description=f"Failed to fetch GitHub commits: {e}")
-	return const._commits[:limit]
+	"""Get the file extension for a given platform."""
+	return {"android": "apk", "linux": "tar.gz", "mac": "dmg", "windows": "exe"}.get(platform)
 
 
 @app.route("/")
-def home():
+def home() -> ResponseReturnValue:
 	return render_template("index.html")
 
 
 @app.route("/<platform>")
-def download(platform: str) -> str:
-	extension = get_extension(platform)
-	if extension:
-		version = get_nvgt_version()
-		return redirect_to(f"downloads/nvgt_{version}.{extension}")
+def download(platform: str) -> ResponseReturnValue:
+	"""Redirect to the download for a specific platform."""
+	if extension := get_extension(platform):
+		version = const.version_cache.get_or_fetch(fetch_nvgt_version)
+		return redirect(f"{const._BASE_URL}/downloads/nvgt_{version}.{extension}", code=301)
 	return render_template("404.html"), 404
 
 
 @app.route("/version.json")
-def version_json() -> str:
-	version = get_nvgt_version()
+def version_json() -> ResponseReturnValue:
+	"""Return the latest version as JSON."""
+	version = const.version_cache.get_or_fetch(fetch_nvgt_version)
 	return jsonify({"version": version})
 
 
 @app.route("/version")
-def version_raw() -> str:
-	return get_nvgt_version()
+def version_raw() -> ResponseReturnValue:
+	"""Return the latest version as raw text."""
+	return const.version_cache.get_or_fetch(fetch_nvgt_version)
 
 
 @app.route("/dev/<platform>")
-def dev_download(platform: str) -> str:
-	extension = get_extension(platform)
-	if not extension:
+def dev_download(platform: str) -> ResponseReturnValue:
+	"""Redirect to the development build for a specific platform."""
+	if not (extension := get_extension(platform)):
 		return render_template("404.html"), 404
-	release = get_latest_github_release()
-	assets = release.get("assets", [])
-	if not assets:
-		return render_template("404.html"), 404
-	for i, asset in enumerate(assets):
-		if not isinstance(asset, dict):
-			continue
-		name = asset.get("name", "").lower()
-		download_url = asset.get("browser_download_url")
-		if name.endswith(f".{extension}") and download_url:
-			return redirect(download_url, code=302)
+	release = const.release_cache.get_or_fetch(fetch_latest_github_release)
+	for asset in release.get("assets", []):
+		if isinstance(asset, dict) and asset.get("name", "").lower().endswith(f".{extension}"):
+			if download_url := asset.get("browser_download_url"):
+				return redirect(download_url, code=302)
 	return render_template("404.html"), 404
 
 
 @app.route("/commits.txt")
 @app.route("/commits.html")
-def commits() -> str:
-	limit = request.args.get("limit", 100)
-	commits = get_github_commits(limit)
-	if commits:
-		if request.path.endswith(".txt"):
-			lines = []
-			for commit in commits:
-				try:
-					sha = commit.get("sha", "unknown")[:7]
-					author = commit.get("commit", {}).get("author", {}).get("name", "Unknown")
-					msg = commit.get("commit", {}).get("message", "No message").splitlines()[0]
-					lines.append(f"{author} {sha}: {msg}")
-				except (KeyError, TypeError, AttributeError):
-					continue
-			return Response("\n".join(lines), mimetype="text/plain")
-		return render_template("commits.html", commits=commits)
-	abort(500, description="Failed to get NVGT commits")
+def commits() -> ResponseReturnValue:
+	"""Display recent commits as HTML or plain text."""
+	commits_data = const.commits_cache.get_or_fetch(fetch_github_commits)
+	if not commits_data:
+		raise abort(500, description="Failed to get NVGT commits")
+	if request.path.endswith(".txt"):
+		lines = []
+		for commit in commits_data:
+			sha = commit.get("sha", "unknown")[:7]
+			author = commit.get("commit", {}).get("author", {}).get("name", "Unknown")
+			msg = commit.get("commit", {}).get("message", "No message").splitlines()[0]
+			lines.append(f"{author} {sha}: {msg}")
+		return Response("\n".join(lines), mimetype="text/plain")
+	return render_template("commits.html", commits=commits_data)
 
 
 if __name__ == "__main__":
