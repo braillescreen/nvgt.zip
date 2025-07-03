@@ -4,6 +4,7 @@ A small website designed to help you download the latest version of the [Nonvisu
 ## Features
 * Use `/mac`, `/win`, etc. to download a version for that particular platform (a full list is on the homepage).
 * Use `/version` to get the latest NVGT version in plaintext, or `/version.json` to get it returned in JSON format.
+* Use `/commits.html` or `/commits.txt` to get the 100 most recent commits to NVGT.
 
 ## Running the code
 This website is a basic Flask app. I run it through Docker, but you can also run it standalone quite easily.
@@ -34,6 +35,10 @@ uv run app.py
 The server will listen on port 3105 on all network interfaces.
 
 ## Contributing
-Contributions are certainly appreciated! If the change is major especially if it involves existing code, please consider opening a discussion or an issue first.
+Contributions are certainly appreciated! If the change is major especially if it involves existing code, please consider opening a discussion or an issue first. Here are some general guidelines:
 
-Enjoy!
+### Install development requirements
+We use a formatter, linter, etc. You can install them into a virtual environment with:
+```
+uv sync --dev
+```
