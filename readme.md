@@ -2,7 +2,7 @@
 A small website designed to help you download the latest version of the [Nonvisual Gaming Toolkit](https://nvgt.gg).
 
 ## Features
-* Use `/mac`, `/win`, etc. to download a version for that particular platform (a full list is on the homepage).
+* Use `/mac`, `/windows`, etc. to download a version for that particular platform (a full list is on the homepage).
 * Use `/version` to get the latest NVGT version in plaintext, or `/version.json` to get it returned in JSON format.
 * Use `/commits.html` or `/commits.txt` to get the 100 most recent commits to NVGT displayed in that format.
 
