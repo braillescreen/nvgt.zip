@@ -12,7 +12,8 @@ Permission is granted to anyone to use this software for any purpose, including 
 """
 
 import logging
-from typing import Optional
+from functools import wraps
+from typing import Any, Callable
 
 import requests
 from flask import Flask, Response, abort, jsonify, redirect, render_template, request
@@ -30,41 +31,42 @@ if config.debugging:
 session = requests.Session()
 
 
-def handle_request_error(e: requests.RequestException, message: str) -> None:
-	"""Handle errors from requests."""
-	app.logger.error(f"{message}: {e}")
-	abort(502, description=f"{message}: {e}")
+def handle_api_error(func: Callable) -> Callable:
+	"""Decorator to handle request errors and abort on failure."""
+
+	@wraps(func)
+	def wrapper(*args, **kwargs) -> Any:
+		try:
+			return func(*args, **kwargs)
+		except requests.RequestException as e:
+			app.logger.error(f"API request failed: {e}")
+			abort(502, description=f"Failed to fetch data: {e}")
+
+	return wrapper
 
 
-def fetch_nvgt_version() -> Optional[str]:
+@handle_api_error
+def fetch_from_api(url: str, params: dict = None) -> Any:
+	"""Fetch data from a URL and return the JSON/text response."""
+	response = session.get(url, params=params)
+	response.raise_for_status()
+	return response.json() if "application/json" in response.headers.get("Content-Type", "") else response.text.strip()
+
+
+def fetch_nvgt_version() -> str:
 	"""Fetch the latest NVGT version string."""
-	try:
-		response = session.get(f"{config.base_url}/downloads/latest_version")
-		response.raise_for_status()
-		return response.text.strip()
-	except requests.RequestException as e:
-		handle_request_error(e, "Failed to get NVGT version")
+	return fetch_from_api(f"{config.base_url}/downloads/latest_version")
 
 
-def fetch_latest_github_release() -> Optional[dict]:
+def fetch_latest_github_release() -> dict:
 	"""Fetch the latest GitHub release data."""
-	try:
-		response = session.get(f"{config.github_api}/releases/tags/latest")
-		response.raise_for_status()
-		return response.json()
-	except requests.RequestException as e:
-		handle_request_error(e, "Failed to fetch GitHub release")
+	return fetch_from_api(f"{config.github_api}/releases/tags/latest")
 
 
-def fetch_github_commits() -> Optional[list]:
+def fetch_github_commits() -> list:
 	"""Fetch recent GitHub commits."""
 	limit = min(100, max(1, int(request.args.get("limit", 100))))
-	try:
-		response = session.get(f"{config.github_api}/commits?per_page={limit}")
-		response.raise_for_status()
-		return response.json()
-	except requests.RequestException as e:
-		handle_request_error(e, "Failed to fetch GitHub commits")
+	return fetch_from_api(f"{config.github_api}/commits", params={"per_page": limit})
 
 
 @app.route("/")
@@ -107,6 +109,7 @@ def dev_download(platform: str) -> ResponseReturnValue:
 	return render_template("404.html"), 404
 
 
+@app.route("/commits")
 @app.route("/commits.txt")
 @app.route("/commits.html")
 def commits() -> ResponseReturnValue:
@@ -114,11 +117,13 @@ def commits() -> ResponseReturnValue:
 	commits_data = config.commits_cache.get_or_fetch(fetch_github_commits)
 	if not commits_data:
 		abort(500, description="Failed to get NVGT commits")
-	if request.path.endswith(".txt"):
+	if request.path.endswith((".txt", "/commits")):
 		lines = [
-			f"{commit.get('commit', {}).get('author', {}).get('name', 'Unknown')} "
-			f"{commit.get('sha', 'unknown')[:7]}: "
-			f"{commit.get('commit', {}).get('message', 'No message').splitlines()[0]}"
+			(
+				f"{commit.get('commit', {}).get('author', {}).get('name', 'Unknown')} "
+				f"{commit.get('sha', 'unknown')[:7]}: "
+				f"{commit.get('commit', {}).get('message', 'No message').splitlines()[0]}"
+			)
 			for commit in commits_data
 		]
 		return Response("\n".join(lines), mimetype="text/plain")
