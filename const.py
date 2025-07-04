@@ -2,11 +2,12 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-_BASE_URL = "https://nvgt.gg"
-_DEV_URL = "https://github.com/samtupy/nvgt"
-_GITHUB_API = "https://api.github.com/repos/samtupy/nvgt"
-_DEBUGGING = False
-_TTL = 300
+PLATFORM_EXTENSIONS: dict[str, str] = {
+	"android": "apk",
+	"linux": "tar.gz",
+	"mac": "dmg",
+	"windows": "exe",
+}
 
 
 @dataclass
@@ -15,7 +16,7 @@ class Cache:
 
 	data: Any = None
 	timestamp: float = 0.0
-	ttl: int = _TTL
+	ttl: int = 300
 
 	def is_valid(self) -> bool:
 		"""Check if the cache is still valid."""
@@ -29,6 +30,21 @@ class Cache:
 		return self.data
 
 
-version_cache = Cache()
-release_cache = Cache()
-commits_cache = Cache()
+@dataclass
+class Config:
+	"""Represents the application configuration."""
+
+	base_url: str = "https://nvgt.gg"
+	dev_url: str = "https://github.com/samtupy/nvgt"
+	github_api: str = "https://api.github.com/repos/samtupy/nvgt"
+	debugging: bool = False
+	ttl: int = 300
+	version_cache: Cache = field(default_factory=Cache)
+	release_cache: Cache = field(default_factory=Cache)
+	commits_cache: Cache = field(default_factory=Cache)
+
+	def __post_init__(self):
+		"""Initialize caches with the correct TTL."""
+		self.version_cache.ttl = self.ttl
+		self.release_cache.ttl = self.ttl
+		self.commits_cache.ttl = self.ttl
