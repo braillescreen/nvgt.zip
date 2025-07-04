@@ -38,13 +38,6 @@ class Config:
 	dev_url: str = "https://github.com/samtupy/nvgt"
 	github_api: str = "https://api.github.com/repos/samtupy/nvgt"
 	debugging: bool = False
-	ttl: int = 300
 	version_cache: Cache = field(default_factory=Cache)
 	release_cache: Cache = field(default_factory=Cache)
 	commits_cache: Cache = field(default_factory=Cache)
-
-	def __post_init__(self):
-		"""Initialize caches with the correct TTL."""
-		self.version_cache.ttl = self.ttl
-		self.release_cache.ttl = self.ttl
-		self.commits_cache.ttl = self.ttl
