@@ -91,6 +91,7 @@ def version_json() -> ResponseReturnValue:
 
 
 @app.route("/version")
+@app.route("/version.txt")
 def version_raw() -> ResponseReturnValue:
 	"""Return the latest version as raw text."""
 	return config.version_cache.get_or_fetch(fetch_nvgt_version)
