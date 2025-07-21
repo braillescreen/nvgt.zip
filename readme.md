@@ -21,7 +21,6 @@ docker compose up -d
 ```
 
 #### My one-line restart command
-This small set of commands should be all that is required to get you running the latest version of the code.
 ```
 cd nvgt.zip; docker compose down; git pull; docker compose up -d
 ```
