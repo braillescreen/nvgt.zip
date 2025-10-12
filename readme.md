@@ -1,5 +1,5 @@
 # [NVGT.zip](https://nvgt.zip)
-A small website designed to help you download the latest version of the [Nonvisual Gaming Toolkit](https://nvgt.gg).
+A small website designed to help you download the latest version of the [Nonvisual Gaming Toolkit](https://nvgt.dev).
 
 ## Features
 * Use `/mac`, `/windows`, etc. to download a version for that particular platform (a full list is on the homepage).
