@@ -1,5 +1,5 @@
 """
-const.py - constints for the app such as download locations for NVGT, supported platforms etc. Along with a time-based cache.
+const.py - constints for the app such as URLs for NVGT, supported platforms etc. Along with a time-based cache.
 nvgt.zip
 Copyright (c) 2024-2025 BrailleScreen
 
@@ -49,4 +49,4 @@ class Config:
 	debugging: bool = False
 	version_cache: Cache = field(default_factory=lambda: Cache(ttl=300))
 	release_cache: Cache = field(default_factory=lambda: Cache(ttl=900))
-	commits_cache: Cache = field(default_factory=lambda: Cache(ttl=900))
+	commits_cache: Cache = field(default_factory=lambda: Cache(ttl=300))
