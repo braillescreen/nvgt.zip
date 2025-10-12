@@ -25,6 +25,11 @@ docker compose up -d
 cd nvgt.zip; docker compose down; git pull; docker compose up -d
 ```
 
+#### Re-build the container from scratch
+```
+docker compose pull; docker compose down; docker compose build; docker compose up -d
+```
+
 ### Running standalone using uv
 We use [Uv](https://docs.astral.sh/uv/getting-started/installation) for our package manager, as it creates a clean virtual environment.
 
