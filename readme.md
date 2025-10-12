@@ -7,7 +7,7 @@ A small website designed to help you download the latest version of the [Nonvisu
 * Use `/commits.html` or `/commits.txt` to get the 100 most recent commits to NVGT displayed in that format.
 
 ## Running the code
-This website is a basic Flask app. I run it through Docker, but you can also run it standalone quite easily.
+This website backend is a basic Flask app. I run it through Docker, but you can run it standalone quite easily:
 
 Start by cloning the code:
 ```
@@ -26,7 +26,9 @@ cd nvgt.zip; docker compose down; git pull; docker compose up -d
 ```
 
 ### Running standalone using uv
-Simply run `git pull` to update.
+We use [Uv](https://docs.astral.sh/uv/getting-started/installation) for our package manager, as it creates a clean virtual environment.
+
+Assuming you have this repository cloned, simply run `git pull` to update it to the latest commit and run:
 ```
 pip3 install uv
 uv run app.py
@@ -37,10 +39,10 @@ The server is configured to listen on port 3105 on all network interfaces.
 ## Contributing
 Contributions are certainly appreciated! If the change is major especially if it involves existing code, please consider opening a discussion or an issue first. Here are some general guidelines:
 
-### Install development requirements
+### Installing development requirements
 We use a formatter, linter, etc. You can install them into a virtual environment with:
 ```
 uv sync --dev
 ```
 
-It would also be helpful if you install our pre-commit hooks using `pre-commit`.
+It would also be helpful to install our pre-commit hooks using `pre-commit install`.
