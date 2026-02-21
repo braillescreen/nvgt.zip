@@ -50,4 +50,7 @@ We use a formatter, linter, etc. You can install them into a virtual environment
 uv sync --dev
 ```
 
-It would also be helpful to install our pre-commit hooks using `pre-commit install`.
+It would also be helpful to install our pre-commit hooks using:
+```
+pre-commit install`.
+```
