@@ -52,5 +52,5 @@ uv sync --dev
 
 It would also be helpful to install our pre-commit hooks using:
 ```
-pre-commit install`.
+pre-commit install
 ```
