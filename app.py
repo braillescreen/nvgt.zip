@@ -16,6 +16,7 @@ from functools import wraps
 from typing import Any, Callable
 
 import requests
+import user_agents
 from flask import Flask, Response, abort, jsonify, redirect, render_template, request
 from flask.typing import ResponseReturnValue
 
@@ -69,6 +70,25 @@ def fetch_github_commits() -> list:
 	return fetch_from_api(f"{config.github_api}/commits", params={"per_page": limit})
 
 
+OS_FAMILY_TO_PLATFORM: dict[str, str] = {
+	"Android": "android",
+	"Windows": "windows",
+	"Mac OS X": "mac",
+	"macOS": "mac",
+	"Linux": "linux",
+	"Ubuntu": "linux",
+	"Fedora": "linux",
+	"Debian": "linux",
+	"Arch Linux": "linux",
+}
+
+
+def detect_platform_from_ua() -> str | None:
+	"""Detect a download platform key from the request's User-Agent header."""
+	ua = user_agents.parse(request.headers.get("User-Agent", ""))
+	return OS_FAMILY_TO_PLATFORM.get(ua.os.family)
+
+
 @app.route("/")
 def home() -> ResponseReturnValue:
 	return render_template("index.html")
@@ -77,6 +97,11 @@ def home() -> ResponseReturnValue:
 @app.route("/<platform>")
 def download(platform: str) -> ResponseReturnValue:
 	"""Redirect to the download for a specific platform."""
+	if platform == "a":
+		detected = detect_platform_from_ua()
+		if detected is None:
+			return render_template("404.html"), 404
+		platform = detected
 	if extension := PLATFORM_EXTENSIONS.get(platform):
 		version = config.version_cache.get_or_fetch(fetch_nvgt_version)
 		return redirect(f"{config.base_url}/downloads/nvgt_{version}.{extension}", code=301)
@@ -100,6 +125,11 @@ def version_raw() -> ResponseReturnValue:
 @app.route("/dev/<platform>")
 def dev_download(platform: str) -> ResponseReturnValue:
 	"""Redirect to the development build for a specific platform."""
+	if platform == "a":
+		detected = detect_platform_from_ua()
+		if detected is None:
+			return render_template("404.html"), 404
+		platform = detected
 	if not (extension := PLATFORM_EXTENSIONS.get(platform)):
 		return render_template("404.html"), 404
 	release = config.release_cache.get_or_fetch(fetch_latest_github_release)
