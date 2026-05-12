@@ -20,7 +20,7 @@ import user_agents
 from flask import Flask, Response, abort, jsonify, redirect, render_template, request
 from flask.typing import ResponseReturnValue
 
-from const import PLATFORM_EXTENSIONS, Config
+from const import OS_FAMILY_TO_PLATFORM, PLATFORM_EXTENSIONS, Config
 
 config = Config()
 app = Flask(__name__)
@@ -68,19 +68,6 @@ def fetch_github_commits() -> list:
 	"""Fetch recent GitHub commits."""
 	limit = min(100, max(1, int(request.args.get("limit", 100))))
 	return fetch_from_api(f"{config.github_api}/commits", params={"per_page": limit})
-
-
-OS_FAMILY_TO_PLATFORM: dict[str, str] = {
-	"Android": "android",
-	"Windows": "windows",
-	"Mac OS X": "mac",
-	"macOS": "mac",
-	"Linux": "linux",
-	"Ubuntu": "linux",
-	"Fedora": "linux",
-	"Debian": "linux",
-	"Arch Linux": "linux",
-}
 
 
 def detect_platform_from_ua() -> str | None:

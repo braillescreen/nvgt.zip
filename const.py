@@ -23,6 +23,19 @@ PLATFORM_EXTENSIONS: dict[str, str] = {
 }
 
 
+OS_FAMILY_TO_PLATFORM: dict[str, str] = {
+	"Android": "android",
+	"Windows": "windows",
+	"Mac OS X": "mac",
+	"macOS": "mac",
+	"Linux": "linux",
+	"Ubuntu": "linux",
+	"Fedora": "linux",
+	"Debian": "linux",
+	"Arch Linux": "linux",
+}
+
+
 @dataclass
 class Cache:
 	"""A simple time-based cache."""
